@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>キレイになれるかな？ - 美容ノベルゲーム</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Yu Gothic', 'Hiragino Sans', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .game-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><defs><linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:%23ffc3a0;stop-opacity:1" /><stop offset="70%" style="stop-color:%23ffafbd;stop-opacity:1" /><stop offset="100%" style="stop-color:%23c3cfe2;stop-opacity:1" /></linearGradient></defs><rect width="1200" height="800" fill="url(%23sky)"/><circle cx="900" cy="150" r="60" fill="%23fff2cc" opacity="0.8"/><polygon points="0,600 300,550 600,580 900,540 1200,520 1200,800 0,800" fill="%23a8e6cf" opacity="0.8"/></svg>') center/cover;
+        }
+
+        .character-display {
+            position: absolute;
+            bottom: 200px;
+            right: 100px;
+            width: 300px;
+            height: 400px;
+            transition: all 0.8s ease;
+            opacity: 0;
+            transform: translateX(50px);
+        }
+
+        .character-display.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .character-sprite {
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 120px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .character-michiru {
+            background-image: url('images/characters/michiru_before.jpg');
+            font-size: 0;
+            /* background: linear-gradient(135deg, #ff6b6b, #ff8e8e); */
+        }
+
+        .character-michiru-after {
+            background-image: url('images/characters/michiru_after.jpg');
+            font-size: 0;
+            /* background: linear-gradient(135deg, #ff9a9e, #fad0c4); */
+        }
+
+        .character-purin {
+            background-image: url('images/characters/purin.jpg');
+            font-size: 0;
+            /* background: linear-gradient(135deg, #ffd93d, #ffbe0b); */
+        }
+
+        .character-friend {
+            background-image: url('images/characters/friend.jpg');
+            font-size: 0;
+            /* background: linear-gradient(135deg, #74b9ff, #0984e3); */
+        }
+
+        .character-aged {
+            background-image: url('images/characters/aged.jpg');
+            font-size: 0;
+            /* background: linear-gradient(135deg, #636e72, #2d3436); */
+        }
+
+        .text-box {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(20, 20, 40, 0.95));
+            backdrop-filter: blur(10px);
+            border-top: 3px solid #ff6b6b;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .speaker-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff6b6b;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .message-text {
+            flex: 1;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #ffffff;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .next-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .next-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .choice-container {
+            position: absolute;
+            bottom: 220px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            min-width: 400px;
+        }
+
+        .choice-container.active {
+            display: flex;
+        }
+
+        .choice-btn {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 107, 107, 0.5);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: left;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .choice-btn:hover {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.3), rgba(255, 107, 107, 0.1));
+            border-color: #ff6b6b;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(255, 107, 107, 0.3);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="character-display" id="characterDisplay">
+            <div class="character-sprite">👩‍🎓</div>
+        </div>
+
+        <div class="choice-container" id="choiceContainer"></div>
+
+        <div class="text-box">
+            <div class="speaker-name" id="speakerName">キレイになれるかな？</div>
+            <div class="message-text" id="messageText">
+                『キレイになれるかな？』<br><br>美容を学ぶノベルゲームです。<br><br>正しい選択をして、理想の美肌を手に入れましょう♪
+            </div>
+            <div class="controls">
+                <div style="font-size: 12px; color: #aaa;">クリックまたはスペースキーで進む</div>
+                <button class="next-btn" onclick="nextMessage()">次へ ▶</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentScene = 0;
+        let isTyping = false;
+
+        const scenes = [
+            // シーン0: タイトル画面
+            {
+                speaker: "キレイになれるかな？",
+                text: "『キレイになれるかな？』<br><br>美容を学ぶノベルゲームです。<br><br>正しい選択をして、理想の美肌を手に入れましょう♪",
+                character: null,
+                background: "default"
+            },
+            
+            // シーン1: オープニング
+            {
+                speaker: "ナレーター",
+                text: "大学2年生のみちる（20歳）は、美容に全く興味がない女の子。<br>今日も適当に日焼け止めを塗って外出する準備をしていた...",
+                character: null,
+                background: "room"
+            },
+            
+            // シーン2: みちるの登場
+            {
+                speaker: "みちる",
+                text: "あー、また遅刻しそう！<br>日焼け止めも適当に塗っちゃえ〜",
+                character: "👩‍🎓",
+                background: "room"
+            },
+            
+            // シーン3: ハムスターの登場
+            {
+                speaker: "ぷりん",
+                text: "ちょっと待ったー！！<br>その塗り方じゃダメだよ〜！私、日本化粧品検定特級 コスメコンシェルジュのハムスター、ぷりんよ♪",
+                character: "🐹",
+                background: "room"
+            },
+            
+            // シーン4: みちるの反応
+            {
+                speaker: "みちる",
+                text: "え？！ハムスターが喋ってる？！<br>し、しかも日本化粧品検定特級 コスメコンシェルジュって何それ...",
+                character: "👩‍🎓",
+                background: "room"
+            },
+            
+            // シーン5: ぷりんの説明
+            {
+                speaker: "ぷりん",
+                text: "私は美容のプロのハムスターなの！みちるちゃんの肌、このままだと大変なことになっちゃうよ〜！<br>正しいスキンケアを教えてあげる♪",
+                character: "🐹",
+                background: "room"
+            },
+            
+            // シーン6: 選択肢1 - 最初の分岐
+            {
+                speaker: "ぷりん",
+                text: "まず基本中の基本！日焼け止めの正しい塗り方から教えるね。<br>どのくらいの量を使えばいいと思う？",
+                character: "🐹",
+                background: "room",
+                choices: [
+                    { text: "500円玉大くらいかな？", next: 7 },
+                    { text: "少しでいいでしょ、もったいないし", next: 9 },
+                    { text: "わからない、教えて！", next: 11 }
+                ]
+            },
+            
+            // シーン7-8: 正解ルート（500円玉大）
+            {
+                speaker: "ぷりん",
+                text: "正解〜！♪ 顔全体に500円玉大が目安よ！<br>みちるちゃん、センスあるじゃない！",
+                character: "🐹",
+                background: "room"
+            },
+            {
+                speaker: "みちる",
+                text: "本当？嬉しい！でも今まで全然足りてなかった...<br>もっと教えて、ぷりん！",
+                character: "👩‍🎓",
+                background: "room"
+            },
+            
+            // シーン9-10: 不正解ルート（ケチケチ）
+            {
+                speaker: "ぷりん",
+                text: "あちゃ〜💦 それじゃ全然足りないよ〜！<br>日焼け止めをケチったら、シミの原因になっちゃう！",
+                character: "🐹",
+                background: "room"
+            },
+            {
+                speaker: "みちる",
+                text: "え、そうなの？！知らなかった...<br>じゃあ正しい量を教えて！",
+                character: "👩‍🎓",
+                background: "room"
+            },
+            
+            // シーン11-12: 素直ルート
+            {
+                speaker: "ぷりん",
+                text: "いい心がけね♪ 顔全体に500円玉大が基本よ！<br>そして大事なのは塗り方！",
+                character: "🐹",
+                background: "room"
+            },
+            {
+                speaker: "みちる",
+                text: "500円玉大...メモメモ📝<br>塗り方も大事なんですね！",
+                character: "👩‍🎓",
+                background: "room"
+            },
+            
+            // シーン13: 日焼け止めの塗り方講座
+            {
+                speaker: "ぷりん",
+                text: "次は塗り方よ！まず手のひらで日焼け止めを温めてから、<br>おでこ→両頬→鼻→あごの5点に置いて、優しく伸ばすの♪",
+                character: "🐹",
+                background: "room"
+            },
+            
+            // シーン14: 選択肢2 - 塗り方
+            {
+                speaker: "ぷりん",
+                text: "さあ、実際にやってみて！<br>どんな風に塗る？",
+                character: "🐹",
+                background: "room",
+                choices: [
+                    { text: "ゴシゴシ塗り込む！", next: 15 },
+                    { text: "優しくポンポンと叩き込む", next: 17 },
+                    { text: "手のひらで押し込むように", next: 19 }
+                ]
+            },
+            
+            // シーン15-16: バッドエンド直行ルート
+            {
+                speaker: "ぷりん",
+                text: "あーっ！ダメダメ〜！💦<br>ゴシゴシしたら肌が傷ついちゃう！",
+                character: "🐹",
+                background: "room"
+            },
+            {
+                speaker: "みちる",
+                text: "え？でも、しっかり塗らないと効果ないんじゃ...",
+                character: "👩‍🎓",
+                background: "room"
+            },
+            
+            // シーン17-18: 良い回答
+            {
+                speaker: "ぷりん",
+                text: "いいね〜♪ 優しくポンポンが正解！<br>肌に負担をかけずに、ムラなく塗れるのよ！",
+                character: "🐹",
+                background: "room"
+            },
+            {
+                speaker: "みちる",
+                text: "なるほど〜！優しさが大事なんですね♪<br>他にも教えてください！",
+                character: "👩‍🎓",
+                background: "room"
+            },
+            
+            // シーン19-20: まあまあの回答
+            {
+                speaker: "ぷりん",
+                text: "うーん、悪くないけど、もっと良い方法があるの！<br>ポンポンと叩き込む方が肌に優しいのよ♪",
+                character: "🐹",
+                background: "room"
+            },
+            {
+                speaker: "みちる",
+                text: "ポンポン...φ(..)メモメモ<br>美容って奥が深いんですね！",
+                character: "👩‍🎓",
+                background: "room"
+            },
+            
+            // シーン21: 基礎化粧品の話へ
+            {
+                speaker: "ぷりん",
+                text: "日焼け止めをマスターしたら、次は基礎化粧品よ！<br>クレンジング→洗顔→化粧水→美容液→乳液の順番が基本♪",
+                character: "🐹",
+                background: "room"
+            },
+            
+            // シーン22: みちるの現状
+            {
+                speaker: "みちる",
+                text: "え〜と...私、今まで洗顔料で顔洗って終わりでした💦<br>化粧水とかよくわからなくて...",
+                character: "👩‍🎓",
+                background: "room"
+            },
+            
+            // シーン23: 選択肢3 - スキンケアの重要性
+            {
+                speaker: "ぷりん",
+                text: "化粧水の一番大事な役割は何だと思う？",
+                character: "🐹",
+                background: "room",
+                choices: [
+                    { text: "肌に水分を与える", next: 24 },
+                    { text: "肌をきれいにする", next: 26 },
+                    { text: "化粧のりを良くする", next: 28 }
+                ]
+            },
+            
+            // シーン24-25: 正解（水分補給）
+            {
+                speaker: "ぷりん",
+                text: "正解〜！！ 化粧水は肌に水分を与えるのが一番大事♪<br>乾燥はシミ・シワの大敵なのよ〜！",
+                character: "🐹",
+                background: "room"
+            },
+            {
+                speaker: "みちる",
+                text: "そうなんだ！乾燥がそんなに悪いなんて知らなかった...<br>今日から絶対化粧水使います！",
+                character: "👩‍🎓",
+                background: "room"
+            },
+            
+            // シーン26-27: 不正解1
+            {
+                speaker: "ぷりん",
+                text: "うーん、それは洗顔の役割ね💦<br>化粧水は肌に水分を与えて、潤いを保つのが目的よ♪",
+                character: "🐹",
+                background: "room"
+            },
+            {
+                speaker: "みちる",
+                text: "あ、そうか...洗顔とは違うんですね！<br>勉強になります！",
+                character: "👩‍🎓",
+                background: "room"
+            },
+            
+            // シーン28-29: 不正解2
+            {
+                speaker: "ぷりん",
+                text: "それも効果の一つだけど、メインじゃないの！<br>一番大事なのは肌に水分を与えることよ♪",
+                character: "🐹",
+                background: "room"
+            },
+            {
+                speaker: "みちる",
+                text: "水分補給が大事なんですね！<br>お肌も喉が渇くのか〜",
+                character: "👩‍🎓",
+                background: "room"
+            },
+            
+            // シーン30: 最終試験への導入
+            {
+                speaker: "ぷりん",
+                text: "さあ、最後の試験よ！今度の週末、友達と海に行くんでしょ？<br>完璧な準備をして、垢抜けた美肌を手に入れましょう♪",
+                character: "🐹",
+                background: "room"
+            },
+            
+            // シーン31: 最終選択肢
+            {
+                speaker: "ぷりん",
+                text: "海に行く前日の夜、どんなスペシャルケアをする？",
+                character: "🐹",
+                background: "room",
+                choices: [
+                    { text: "パックをして早めに寝る", next: 32 },
+                    { text: "新しい化粧品を試してみる", next: 36 },
+                    { text: "特に何もしない", next: 40 }
+                ]
+            },
+            
+            // シーン32-35: ハッピーエンド
+            {
+                speaker: "ぷりん",
+                text: "素晴らしい判断！！ パックで肌に栄養を与えて、<br>早寝で肌のターンオーバーを促進♪ 完璧よ〜！",
+                character: "🐹",
+                background: "room"
+            },
+            {
+                speaker: "ナレーター",
+                text: "翌日、海にて─",
+                character: null,
+                background: "beach"
+            },
+            {
+                speaker: "友達",
+                text: "みちる〜！なんか肌がツヤツヤで綺麗になった？<br>どんなケアしてるの？教えて〜！",
+                character: "👩‍💼",
+                background: "beach"
+            },
+            {
+                speaker: "みちる",
+                text: "えへへ♪ 実は美容に目覚めちゃって！<br>正しいスキンケアってすごいんだね〜✨ ぷりん、ありがとう！",
+                character: "👩‍🎓",
+                characterType: "after",
+                background: "beach"
+            },
+            
+            // シーン36-39: バッドエンド1
+            {
+                speaker: "ぷりん",
+                text: "えーっ！前日に新しい化粧品は危険よ〜！💦<br>肌に合わなかったら大変なことに...",
+                character: "🐹",
+                background: "room"
+            },
+            {
+                speaker: "ナレーター",
+                text: "翌朝─",
+                character: null,
+                background: "room"
+            },
+            {
+                speaker: "みちる",
+                text: "うわあああ！顔が真っ赤に腫れてる〜！💦<br>海に行けない...😭",
+                character: "👩‍🎓",
+                background: "room"
+            },
+            {
+                speaker: "ぷりん",
+                text: "新しい化粧品は肌に合うかテストが必要なの！<br>前日に試すなんて無謀よ〜。次は気をつけてね💦",
+                character: "🐹",
+                background: "room"
+            },
+            
+            // シーン40-43: バッドエンド2（シミおばさん）
+            {
+                speaker: "ぷりん",
+                text: "あーあ...せっかく教えたのに〜💦<br>紫外線対策しないと、将来大変なことになっちゃうよ...",
+                character: "🐹",
+                background: "room"
+            },
+            {
+                speaker: "ナレーター",
+                text: "30年後─",
+                character: null,
+                background: "city"
+            },
+            {
+                speaker: "みちる（50歳）",
+                text: "あれ？鏡に映ってるこのシミだらけの人...まさか私？！<br>学生時代にもっとケアしておけばよかった〜😭",
+                character: "👩‍🦳",
+                background: "city"
+            },
+            {
+                speaker: "ぷりん",
+                text: "美容は継続が大事なのよ〜...<br>でも今からでも遅くない！正しいケアを始めましょう♪",
+                character: "🐹",
+                background: "city"
+            },
+            
+            // シーン44: 共通エンディング
+            {
+                speaker: "ナレーター",
+                text: "美容は一日にしてならず。<br>正しい知識と継続が美肌への近道です。<br><br>もう一度プレイして、完璧な美肌を目指しましょう♪",
+                character: null,
+                background: "default"
+            }
+        ];
+
+        function typeText(element, text, callback) {
+            if (isTyping) return;
+            isTyping = true;
+            element.innerHTML = '';
+            let index = 0;
+            
+            function typeChar() {
+                if (index < text.length) {
+                    if (text[index] === '<') {
+                        let tagEnd = text.indexOf('>', index);
+                        element.innerHTML += text.substring(index, tagEnd + 1);
+                        index = tagEnd + 1;
+                    } else {
+                        element.innerHTML += text[index];
+                        index++;
+                    }
+                    setTimeout(typeChar, 30);
+                } else {
+                    isTyping = false;
+                    if (callback) callback();
+                }
+            }
+            
+            typeChar();
+        }
+
+        function showScene(sceneIndex) {
+            if (sceneIndex >= scenes.length) {
+                currentScene = 0;
+                showScene(0);
+                return;
+            }
+
+            const scene = scenes[sceneIndex];
+            const speakerElement = document.getElementById('speakerName');
+            const messageElement = document.getElementById('messageText');
+            const characterElement = document.getElementById('characterDisplay');
+            const choiceContainer = document.getElementById('choiceContainer');
+
+            // 背景変更処理
+            if (scene.background) {
+                const gameContainer = document.querySelector('.game-container');
+                
+                if (scene.background === "room") {
+                    gameContainer.style.background = "url('images/backgrounds/room.jpg') center/cover";
+                } else if (scene.background === "beach") {
+                    gameContainer.style.background = "url('images/backgrounds/beach.jpg') center/cover";
+                } else if (scene.background === "city") {
+                    gameContainer.style.background = "url('images/backgrounds/city.jpg') center/cover";
+                } else if (scene.background === "school") {
+                    gameContainer.style.background = "url('images/backgrounds/school.jpg') center/cover";
+                } else if (scene.background === "default") {
+                    gameContainer.style.background = "url('images/backgrounds/default.jpg') center/cover";
+                }
+            }
+
+            // Hide choices
+            choiceContainer.classList.remove('active');
+            choiceContainer.innerHTML = '';
+
+            if (scene.choices) {
+                // Show choices
+                scene.choices.forEach((choice, index) => {
+                    const choiceBtn = document.createElement('button');
+                    choiceBtn.className = 'choice-btn fade-in';
+                    choiceBtn.textContent = choice.text;
+                    choiceBtn.style.animationDelay = `${index * 0.1}s`;
+                    choiceBtn.onclick = () => {
+                        currentScene = choice.next;
+                        showScene(choice.next);
+                    };
+                    choiceContainer.appendChild(choiceBtn);
+                });
+                choiceContainer.classList.add('active');
+                speakerElement.textContent = '';
+                messageElement.innerHTML = '';
+            } else {
+                // Show regular scene
+                speakerElement.textContent = scene.speaker || '';
+                
+                if (scene.character) {
+                    const spriteElement = characterElement.querySelector('.character-sprite');
+                    spriteElement.textContent = scene.character;
+                    
+                    // キャラクター画像適用
+                    spriteElement.className = 'character-sprite';
+                    if (scene.character === "👩‍🎓") {
+                        if (scene.characterType === "after") {
+                            spriteElement.classList.add('character-michiru-after');
+                        } else {
+                            spriteElement.classList.add('character-michiru');
+                        }
+                    } else if (scene.character === "🐹") {
+                        spriteElement.classList.add('character-purin');
+                    } else if (scene.character === "👩‍💼") {
+                        spriteElement.classList.add('character-friend');
+                    } else if (scene.character === "👩‍🦳") {
+                        spriteElement.classList.add('character-aged');
+                    }
+                    
+                    characterElement.classList.add('active');
+                } else {
+                    characterElement.classList.remove('active');
+                }
+
+                typeText(messageElement, scene.text);
+            }
+        }
+
+        function nextMessage() {
+            if (isTyping) {
+                return;
+            }
+            
+            if (currentScene < scenes.length - 1) {
+                currentScene++;
+            } else {
+                currentScene = 0;
+            }
+            
+            showScene(currentScene);
+        }
+
+        // Initialize
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                nextMessage();
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.choice-btn') || e.target.closest('.next-btn')) {
+                return;
+            }
+            nextMessage();
+        });
+
+        // Start the game
+        showScene(0);
+    </script>
+</body>
+</html>
