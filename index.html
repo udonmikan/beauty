@@ -22,7 +22,7 @@
             position: relative;
             width: 100%;
             height: 100vh;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><defs><linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:%23ffc3a0;stop-opacity:1" /><stop offset="70%" style="stop-color:%23ffafbd;stop-opacity:1" /><stop offset="100%" style="stop-color:%23c3cfe2;stop-opacity:1" /></linearGradient></defs><rect width="1200" height="800" fill="url(%23sky)"/><circle cx="900" cy="150" r="60" fill="%23fff2cc" opacity="0.8"/><polygon points="0,600 300,550 600,580 900,540 1200,520 1200,800 0,800" fill="%23a8e6cf" opacity="0.8"/></svg>') center/cover;
+            background: url('images/backgrounds/default.jpg') center/cover;
         }
 
         .character-display {
@@ -60,19 +60,16 @@
         .character-michiru {
             background-image: url('michiru_before.png');
             font-size: 0;
-            /* background: linear-gradient(135deg, #ff6b6b, #ff8e8e); */
         }
 
         .character-michiru-after {
             background-image: url('michiru_after.png');
             font-size: 0;
-            /* background: linear-gradient(135deg, #ff9a9e, #fad0c4); */
         }
 
         .character-purin {
             background-image: url('purin.png');
             font-size: 0;
-            /* background: linear-gradient(135deg, #ffd93d, #ffbe0b); */
         }
 
         .character-friend {
@@ -84,7 +81,6 @@
         .character-aged {
             background-image: url('aged.png');
             font-size: 0;
-            /* background: linear-gradient(135deg, #636e72, #2d3436); */
         }
 
         .text-box {
@@ -206,7 +202,7 @@
             </div>
             <div class="controls">
                 <div style="font-size: 12px; color: #aaa;">クリックまたはスペースキーで進む</div>
-                <button class="next-btn" onclick="nextMessage()">次へ ▶</button>
+                <button class="next-btn" id="nextBtn">次へ ▶</button>
             </div>
         </div>
     </div>
@@ -319,7 +315,7 @@
                 background: "room"
             },
             
-            // シーン13: 日焼け止めの塗り方講座
+            // シーン13: 塗り方講座（合流点）
             {
                 speaker: "ぷりん",
                 text: "次は塗り方よ！まず手のひらで日焼け止めを温めてから、<br>おでこ→両頬→鼻→あごの5点に置いて、優しく伸ばすの♪",
@@ -349,7 +345,7 @@
             },
             {
                 speaker: "みちる",
-                text: "え？でも、しっかり塗らないと効果ないんじゃ...",
+                text: "しっかり塗らないと効果ないんじゃ…って思ってました",
                 character: "👩‍🎓",
                 background: "room"
             },
@@ -382,7 +378,7 @@
                 background: "room"
             },
             
-            // シーン21: 基礎化粧品の話へ
+            // シーン21: 基礎化粧品の話へ（合流点）
             {
                 speaker: "ぷりん",
                 text: "日焼け止めをマスターしたら、次は基礎化粧品よ！<br>クレンジング→洗顔→化粧水→美容液→乳液の順番が基本♪",
@@ -453,7 +449,7 @@
                 background: "room"
             },
             
-            // シーン30: 最終試験への導入
+            // シーン30: 最終試験への導入（合流点）
             {
                 speaker: "ぷりん",
                 text: "さあ、最後の試験よ！今度の週末、友達と海に行くんでしょ？<br>完璧な準備をして、垢抜けた美肌を手に入れましょう♪",
@@ -527,7 +523,7 @@
                 background: "room"
             },
             
-            // シーン40-43: バッドエンド2（シミおばさん）
+            // シーン40-43: バッドエンド2
             {
                 speaker: "ぷりん",
                 text: "あーあ...せっかく教えたのに〜💦<br>紫外線対策しないと、将来大変なことになっちゃうよ...",
@@ -536,12 +532,12 @@
             },
             {
                 speaker: "ナレーター",
-                text: "10年後─",
+                text: "20年後─",
                 character: null,
                 background: "city"
             },
             {
-                speaker: "みちる（30歳）",
+                speaker: "みちる（40歳）",
                 text: "あれ？鏡に映ってるこのシミだらけの人...まさか私？！<br>学生時代にもっとケアしておけばよかった〜😭",
                 character: "👩‍🦳",
                 background: "city"
@@ -676,48 +672,54 @@
                 return;
             }
             
-            // 選択肢がないシーンでのみ自動的に次のシーンに進む
             const currentSceneData = scenes[currentScene];
             if (!currentSceneData.choices) {
-                if (currentScene < scenes.length - 1) {
-                    // 分岐後の合流処理
-                    if (currentScene === 8 || currentScene === 10 || currentScene === 12) {
-                        // シーン8, 10, 12の後は全てシーン13に合流
-                        currentScene = 13;
-                    } else if (currentScene === 18 || currentScene === 16 || currentScene === 20) {
-                        // シーン18, 16, 20の後は全てシーン21に合流
-                        currentScene = 21;
-                    } else if (currentScene === 25 || currentScene === 27 || currentScene === 29) {
-                        // シーン25, 27, 29の後は全てシーン30に合流
-                        currentScene = 30;
-                    } else {
-                        currentScene++;
-                    }
-                } else {
-                    currentScene = 0;
+                let nextScene = currentScene + 1;
+                
+                // 分岐後の合流処理
+                if (currentScene === 8 || currentScene === 10 || currentScene === 12) {
+                    nextScene = 13;
+                } else if (currentScene === 16 || currentScene === 18 || currentScene === 20) {
+                    nextScene = 21;
+                } else if (currentScene === 25 || currentScene === 27 || currentScene === 29) {
+                    nextScene = 30;
+                } else if (currentScene === 35 || currentScene === 39 || currentScene === 43) {
+                    nextScene = 44;
+                } else if (currentScene === 44) {
+                    nextScene = 0;
+                } else if (nextScene >= scenes.length) {
+                    nextScene = 0;
                 }
+                
+                currentScene = nextScene;
+                showScene(currentScene);
             }
-            
-            showScene(currentScene);
         }
 
-        // Initialize
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
-                e.preventDefault();
+        // イベントリスナーの設定
+        document.addEventListener('DOMContentLoaded', function() {
+            const nextBtn = document.getElementById('nextBtn');
+            if (nextBtn) {
+                nextBtn.addEventListener('click', nextMessage);
+            }
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    nextMessage();
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('.choice-btn') || e.target.closest('.next-btn')) {
+                    return;
+                }
                 nextMessage();
-            }
-        });
+            });
 
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('.choice-btn') || e.target.closest('.next-btn')) {
-                return;
-            }
-            nextMessage();
+            // ゲーム開始
+            showScene(0);
         });
-
-        // Start the game
-        showScene(0);
     </script>
 </body>
 </html>
